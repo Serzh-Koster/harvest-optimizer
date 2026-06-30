@@ -1,0 +1,17 @@
+{
+  "name": "publish_4x5_soft",
+  "width": 1080,
+  "height": 1350,
+  "format": "jpg",
+  "quality": 92,
+  "crop": "fit",
+  "background": "blur",
+  "backgroundColor": "#f2eadc",
+  "backgroundOverlayAlpha": 70,
+  "brightness": -0.03,
+  "contrast": 1.13,
+  "saturation": 1.03,
+  "warmth": 0.018,
+  "sharpen": 0,
+  "suffix": "publish_4x5_soft"
+}

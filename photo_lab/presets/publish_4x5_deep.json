@@ -1,0 +1,17 @@
+{
+  "name": "publish_4x5_deep",
+  "width": 1080,
+  "height": 1350,
+  "format": "jpg",
+  "quality": 92,
+  "crop": "fit",
+  "background": "blur",
+  "backgroundColor": "#f2eadc",
+  "backgroundOverlayAlpha": 64,
+  "brightness": -0.045,
+  "contrast": 1.18,
+  "saturation": 1.10,
+  "warmth": 0.02,
+  "sharpen": 0,
+  "suffix": "publish_4x5_deep"
+}

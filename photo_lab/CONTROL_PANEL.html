@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photo Lab Control Panel+</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1011;
+      --panel: #161719;
+      --panel-2: #1e2023;
+      --ink: #e4e6e9;
+      --muted: #828892;
+      --line: #2a2d33;
+      --accent: #378b91;
+      --accent-hover: #48a6ac;
+      --accent-2: #a46c48;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--line);
+      border-radius: 3px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .file-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      padding: 0 16px;
+      border-radius: 6px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .file-button:hover {
+      background: var(--line);
+      border-color: var(--muted);
+    }
+
+    .file-button input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+
+    .file-name {
+      color: var(--accent);
+      font-size: 12px;
+      line-height: 1.4;
+      min-height: 17px;
+      word-break: break-all;
+      margin-top: -8px;
+    }
+
+    .group {
+      background: transparent;
+      padding: 0;
+      border: none;
+    }
+
+    .group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .segmented.wide {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .segmented button,
+    .action-row button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease;
+    }
+
+    .segmented button:hover,
+    .action-row button:hover {
+      background: var(--line);
+    }
+
+    .segmented button.active {
+      border-color: var(--accent);
+      background: rgba(55, 139, 145, 0.15);
+      color: var(--accent-hover);
+      font-weight: 600;
+    }
+
+    .slider {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .slider:first-child {
+      margin-top: 0;
+    }
+
+    .slider-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .slider-label span:last-child {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 46px;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      height: 16px;
+      margin: 0;
+    }
+
+    input[type="range"]:focus {
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 3px;
+      background: var(--line);
+      border-radius: 2px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: -5.5px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: var(--accent-hover);
+    }
+    
+    input[type="range"]::-moz-range-track {
+      width: 100%;
+      height: 3px;
+      background: var(--line);
+      border-radius: 2px;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.1s;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .action-row button.primary {
+      border-color: var(--accent-2);
+      background: var(--accent-2);
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .action-row button.primary:hover {
+      background: #b57a53;
+      border-color: #b57a53;
+    }
+
+    .stage-wrap {
+      min-width: 0;
+      padding: 24px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 16px;
+      background: var(--bg);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .image-info {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .compare-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: min(380px, 48vw);
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: #000;
+      box-shadow: inset 0 0 0 1px var(--line), var(--shadow);
+    }
+
+    .empty-state {
+      display: grid;
+      gap: 12px;
+      place-items: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state strong {
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .canvas-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: none;
+      place-items: center;
+      background:
+        linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.03) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.03) 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+    }
+
+    /* Виправлення багу з розмірами полотен */
+    .canvas-stack {
+      position: relative;
+      display: inline-block; /* Чітко обгортає beforeCanvas */
+      max-width: 100%;
+      max-height: calc(100vh - 120px);
+    }
+
+    #beforeCanvas {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100vh - 120px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .after-layer {
+      position: absolute;
+      inset: 0 auto 0 0;
+      overflow: hidden;
+      width: 50%;
+      border-right: 1.5px solid rgba(255,255,255,0.8);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Додаємо зручний візуальний розділювач */
+    .after-layer::after {
+      content: '';
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 40px;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+
+    #afterCanvas {
+      display: block;
+      height: 100%; /* Бере висоту від beforeCanvas */
+      width: auto;  /* Пропорційно розтягує ширину */
+      max-width: none;
+      max-height: none;
+    }
+
+    .badge {
+      position: absolute;
+      top: 16px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      pointer-events: none;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .badge.before { right: 16px; }
+    .badge.after { left: 16px; }
+
+    .status {
+      color: var(--accent);
+      font-size: 12px;
+      min-height: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
+      }
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        max-height: none;
+      }
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .compare-control {
+        min-width: 0;
+      }
+      #beforeCanvas, .canvas-stack {
+        max-height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Photo Lab+</h1>
+        <label class="file-button">
+          Open Image
+          <input id="fileInput" type="file" accept="image/*">
+        </label>
+      </div>
+
+      <div id="fileName" class="file-name"></div>
+
+      <section class="group">
+        <div class="group-title">
+          <span>Preset</span>
+          <span id="presetName">Neutral</span>
+        </div>
+        <div class="segmented" role="group" aria-label="Preset">
+          <button type="button" data-preset="soft">Soft</button>
+          <button type="button" data-preset="deep">Deep</button>
+          <button type="button" data-preset="skinSafe">Skin-safe</button>
+        </div>
+      </section>
+
+      <section class="group">
+        <div class="group-title">
+          <span>Quick Adjustments</span>
+        </div>
+        <div class="segmented wide" role="group" aria-label="Quick control">
+          <button type="button" data-quick="calmWarm">Calm orange</button>
+          <button type="button" data-quick="liftShadow">Lift shadows</button>
+          <button type="button" data-quick="holdHighlights">Hold lights</button>
+          <button type="button" data-view="after">After only</button>
+        </div>
+      </section>
+
+      <section class="group" id="sliderGroup"></section>
+
+      <div class="action-row">
+        <button type="button" id="resetButton">Reset All</button>
+        <button type="button" id="exportButton" class="primary">Export JPG</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </aside>
+
+    <section class="stage-wrap">
+      <div class="topbar">
+        <div id="imageInfo" class="image-info">No image</div>
+        <label class="compare-control">
+          <span>Before</span>
+          <input id="compareSlider" type="range" min="0" max="100" value="50">
+          <span>After</span>
+        </label>
+      </div>
+
+      <div id="stage" class="stage">
+        <div id="emptyState" class="empty-state">
+          <strong>Workspace is empty</strong>
+          <span>Drop a JPG, PNG, WEBP, or BMP file here</span>
+        </div>
+        <div id="canvasShell" class="canvas-shell">
+          <div id="canvasStack" class="canvas-stack">
+            <canvas id="beforeCanvas"></canvas>
+            <div id="afterLayer" class="after-layer">
+              <canvas id="afterCanvas"></canvas>
+            </div>
+            <span class="badge after">After</span>
+            <span class="badge before">Before</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const sliders = [
+      { key: "exposure", label: "Exposure", min: -100, max: 100, step: 1, value: 0 },
+      { key: "gamma", label: "Gamma", min: -80, max: 80, step: 1, value: 0 },
+      { key: "contrast", label: "Contrast", min: -100, max: 120, step: 1, value: 0 },
+      { key: "clarity", label: "Midtone clarity", min: -100, max: 100, step: 1, value: 0 },
+      { key: "highlights", label: "Highlights", min: -100, max: 100, step: 1, value: 0 },
+      { key: "shadows", label: "Shadows", min: -100, max: 100, step: 1, value: 0 },
+      { key: "whites", label: "Whites", min: -100, max: 100, step: 1, value: 0 },
+      { key: "blacks", label: "Blacks", min: -100, max: 100, step: 1, value: 0 },
+      { key: "saturation", label: "Saturation", min: -100, max: 100, step: 1, value: 0 },
+      { key: "vibrance", label: "Vibrance", min: -100, max: 100, step: 1, value: 0 },
+      { key: "warmth", label: "Warmth", min: -100, max: 100, step: 1, value: 0 },
+      { key: "tint", label: "Tint", min: -100, max: 100, step: 1, value: 0 },
+      { key: "orangeGuard", label: "Orange guard", min: 0, max: 100, step: 1, value: 0 },
+      { key: "skinSafe", label: "Skin-safe", min: 0, max: 100, step: 1, value: 0 }
+    ];
+
+    const presets = {
+      neutral: {
+        exposure: 0, gamma: 0, contrast: 0, clarity: 0, saturation: 0,
+        vibrance: 0, warmth: 0, tint: 0, highlights: 0, shadows: 0,
+        whites: 0, blacks: 0, orangeGuard: 0, skinSafe: 0
+      },
+      soft: {
+        exposure: -8, gamma: 4, contrast: 16, clarity: 8, saturation: 2,
+        vibrance: 12, warmth: 2, tint: 0, highlights: -6, shadows: -3,
+        whites: -3, blacks: -4, orangeGuard: 18, skinSafe: 24
+      },
+      deep: {
+        exposure: -14, gamma: 2, contrast: 30, clarity: 18, saturation: 5,
+        vibrance: 18, warmth: 2, tint: 0, highlights: -14, shadows: -12,
+        whites: -8, blacks: -14, orangeGuard: 34, skinSafe: 32
+      },
+      skinSafe: {
+        exposure: -10, gamma: 5, contrast: 24, clarity: 12, saturation: 2,
+        vibrance: 10, warmth: -2, tint: 0, highlights: -10, shadows: -8,
+        whites: -6, blacks: -10, orangeGuard: 62, skinSafe: 78
+      }
+    };
+
+    const state = {
+      image: null,
+      fileName: "",
+      sourceCanvas: document.createElement("canvas"),
+      previewSource: document.createElement("canvas"),
+      values: { ...presets.neutral },
+      renderHandle: 0,
+      activePreset: "neutral"
+    };
+
+    const fileInput = document.getElementById("fileInput");
+    const fileName = document.getElementById("fileName");
+    const imageInfo = document.getElementById("imageInfo");
+    const status = document.getElementById("status");
+    const sliderGroup = document.getElementById("sliderGroup");
+    const beforeCanvas = document.getElementById("beforeCanvas");
+    const afterCanvas = document.getElementById("afterCanvas");
+    const afterLayer = document.getElementById("afterLayer");
+    const emptyState = document.getElementById("emptyState");
+    const canvasShell = document.getElementById("canvasShell");
+    const compareSlider = document.getElementById("compareSlider");
+    const presetName = document.getElementById("presetName");
+
+    function buildSliders() {
+      sliderGroup.innerHTML = sliders.map((item) => `
+        <label class="slider" for="${item.key}">
+          <span class="slider-label">
+            <span>${item.label}</span>
+            <span id="${item.key}Value">0</span>
+          </span>
+          <input
+            id="${item.key}"
+            type="range"
+            min="${item.min}"
+            max="${item.max}"
+            step="${item.step}"
+            value="${item.value}"
+            data-slider="${item.key}">
+        </label>
+      `).join("");
+
+      sliderGroup.querySelectorAll("[data-slider]").forEach((input) => {
+        input.addEventListener("input", () => {
+          state.values[input.dataset.slider] = Number(input.value);
+          state.activePreset = "custom";
+          syncUi();
+          scheduleRender();
+        });
+      });
+    }
+
+    function syncUi() {
+      sliders.forEach((item) => {
+        const input = document.getElementById(item.key);
+        const readout = document.getElementById(`${item.key}Value`);
+        if (input) input.value = state.values[item.key];
+        if (readout) readout.textContent = formatValue(item.key, state.values[item.key]);
+      });
+
+      document.querySelectorAll("[data-preset]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.preset === state.activePreset);
+      });
+
+      const names = {
+        neutral: "Neutral",
+        soft: "Soft",
+        deep: "Deep",
+        skinSafe: "Skin-safe",
+        custom: "Custom"
+      };
+      presetName.textContent = names[state.activePreset] || "Custom";
+    }
+
+    function formatValue(key, value) {
+      if (key === "skinSafe" || key === "orangeGuard") return `${value}%`;
+      return value > 0 ? `+${value}` : String(value);
+    }
+
+    function applyPreset(name) {
+      state.values = { ...presets[name] };
+      state.activePreset = name;
+      syncUi();
+      scheduleRender();
+    }
+
+    function applyQuick(name) {
+      const changes = {
+        calmWarm: {
+          warmth: Math.max(-100, state.values.warmth - 12),
+          orangeGuard: Math.min(100, state.values.orangeGuard + 28),
+          skinSafe: Math.min(100, state.values.skinSafe + 18),
+          saturation: Math.max(-100, state.values.saturation - 6)
+        },
+        liftShadow: {
+          shadows: Math.min(100, state.values.shadows + 18),
+          blacks: Math.min(100, state.values.blacks + 10),
+          contrast: Math.max(-100, state.values.contrast - 4)
+        },
+        holdHighlights: {
+          highlights: Math.max(-100, state.values.highlights - 18),
+          whites: Math.max(-100, state.values.whites - 12),
+          exposure: Math.max(-100, state.values.exposure - 4)
+        }
+      }[name];
+
+      if (!changes) return;
+      state.values = { ...state.values, ...changes };
+      state.activePreset = "custom";
+      syncUi();
+      scheduleRender();
+    }
+
+    function scheduleRender() {
+      if (!state.image) return;
+      cancelAnimationFrame(state.renderHandle);
+      state.renderHandle = requestAnimationFrame(renderPreview);
+    }
+
+    function setStatus(text) {
+      status.textContent = text;
+    }
+
+    function fitPreviewSize(width, height) {
+      const longest = Math.max(width, height);
+      const limit = 1500;
+      const scale = longest > limit ? limit / longest : 1;
+      return {
+        width: Math.max(1, Math.round(width * scale)),
+        height: Math.max(1, Math.round(height * scale))
+      };
+    }
+
+    async function loadFile(file) {
+      if (!file) return;
+      setStatus("Loading...");
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.decoding = "async";
+
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        state.image = image;
+        state.fileName = file.name;
+        drawSourceCanvases(image);
+        fileName.textContent = file.name;
+        imageInfo.textContent = `${image.naturalWidth} × ${image.naturalHeight}`;
+        emptyState.style.display = "none";
+        canvasShell.style.display = "grid";
+        setStatus("");
+        renderPreview();
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        setStatus("Could not open image.");
+      };
+
+      image.src = url;
+    }
+
+    function drawSourceCanvases(image) {
+      state.sourceCanvas.width = image.naturalWidth;
+      state.sourceCanvas.height = image.naturalHeight;
+      state.sourceCanvas.getContext("2d", { willReadFrequently: true }).drawImage(image, 0, 0);
+
+      const previewSize = fitPreviewSize(image.naturalWidth, image.naturalHeight);
+      state.previewSource.width = previewSize.width;
+      state.previewSource.height = previewSize.height;
+      state.previewSource
+        .getContext("2d", { willReadFrequently: true })
+        .drawImage(image, 0, 0, previewSize.width, previewSize.height);
+
+      beforeCanvas.width = previewSize.width;
+      beforeCanvas.height = previewSize.height;
+      afterCanvas.width = previewSize.width;
+      afterCanvas.height = previewSize.height;
+
+      const beforeContext = beforeCanvas.getContext("2d");
+      beforeContext.clearRect(0, 0, beforeCanvas.width, beforeCanvas.height);
+      beforeContext.drawImage(state.previewSource, 0, 0);
+
+      setCompare(Number(compareSlider.value));
+    }
+
+    function renderPreview() {
+      if (!state.image) return;
+      processCanvas(state.previewSource, afterCanvas, state.values);
+    }
+
+    function processCanvas(source, target, values) {
+      target.width = source.width;
+      target.height = source.height;
+
+      const sourceContext = source.getContext("2d", { willReadFrequently: true });
+      const targetContext = target.getContext("2d", { willReadFrequently: true });
+      const imageData = sourceContext.getImageData(0, 0, source.width, source.height);
+      const data = imageData.data;
+      const exposure = values.exposure / 420;
+      const gamma = 1 - (values.gamma / 140);
+      const contrast = 1 + (values.contrast / 100);
+      const clarity = values.clarity / 100;
+      const saturation = 1 + (values.saturation / 100);
+      const vibrance = values.vibrance / 100;
+      const warmth = values.warmth / 100;
+      const tint = values.tint / 100;
+      const highlights = values.highlights / 100;
+      const shadows = values.shadows / 100;
+      const whites = values.whites / 100;
+      const blacks = values.blacks / 100;
+      const orangeGuard = values.orangeGuard / 100;
+      const skinSafe = values.skinSafe / 100;
+
+      for (let index = 0; index < data.length; index += 4) {
+        let r = data[index] / 255;
+        let g = data[index + 1] / 255;
+        let b = data[index + 2] / 255;
+
+        r += exposure;
+        g += exposure;
+        b += exposure;
+
+        let luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+        const shadowMask = clamp01((0.52 - luminance) / 0.52);
+        const highlightMask = clamp01((luminance - 0.48) / 0.52);
+        const whiteMask = smoothstep(0.68, 1.0, luminance);
+        const blackMask = 1 - smoothstep(0.0, 0.32, luminance);
+
+        if (shadows !== 0) {
+          const amount = shadows * shadowMask * 0.42;
+          r += amount;
+          g += amount;
+          b += amount;
+        }
+
+        if (highlights !== 0) {
+          const amount = highlights * highlightMask * 0.36;
+          r += amount;
+          g += amount;
+          b += amount;
+        }
+
+        if (whites !== 0) {
+          const amount = whites * whiteMask * 0.28;
+          r += amount;
+          g += amount;
+          b += amount;
+        }
+
+        if (blacks !== 0) {
+          const amount = blacks * blackMask * 0.30;
+          r += amount;
+          g += amount;
+          b += amount;
+        }
+
+        if (gamma !== 1) {
+          r = Math.pow(clamp01(r), Math.max(0.2, gamma));
+          g = Math.pow(clamp01(g), Math.max(0.2, gamma));
+          b = Math.pow(clamp01(b), Math.max(0.2, gamma));
+        }
+
+        r = ((r - 0.5) * contrast) + 0.5;
+        g = ((g - 0.5) * contrast) + 0.5;
+        b = ((b - 0.5) * contrast) + 0.5;
+
+        luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+        if (clarity !== 0) {
+          const midMask = 1 - Math.min(1, Math.abs(luminance - 0.5) / 0.5);
+          const amount = (luminance - 0.5) * clarity * midMask * 0.45;
+          r += amount;
+          g += amount;
+          b += amount;
+        }
+
+        const gray = (0.299 * r) + (0.587 * g) + (0.114 * b);
+        const maxChannel = Math.max(r, g, b);
+        const minChannel = Math.min(r, g, b);
+        const colorfulness = clamp01(maxChannel - minChannel);
+        const vibranceStrength = 1 + (vibrance * (1 - colorfulness) * 0.85);
+        const finalSaturation = saturation * vibranceStrength;
+        r = gray + ((r - gray) * finalSaturation);
+        g = gray + ((g - gray) * finalSaturation);
+        b = gray + ((b - gray) * finalSaturation);
+
+        r += warmth * 0.08;
+        g += warmth * 0.012;
+        b -= warmth * 0.08;
+
+        g += tint * 0.055;
+        r -= tint * 0.020;
+        b -= tint * 0.020;
+
+        if (orangeGuard > 0) {
+          const warmMask = getWarmOrangeMask(r, g, b);
+          if (warmMask > 0) {
+            const amount = orangeGuard * warmMask;
+            r -= amount * 0.095;
+            g -= amount * 0.018;
+            b += amount * 0.038;
+            const guardedGray = (0.299 * r) + (0.587 * g) + (0.114 * b);
+            r = lerp(r, guardedGray, amount * 0.10);
+            g = lerp(g, guardedGray, amount * 0.04);
+          }
+        }
+
+        if (skinSafe > 0) {
+          const skinMask = getSkinMask(r, g, b);
+          if (skinMask > 0) {
+            const amount = skinSafe * skinMask;
+            const warmGray = (r * 0.46) + (g * 0.36) + (b * 0.18);
+            r = lerp(r, warmGray, amount * 0.22);
+            g = lerp(g, warmGray, amount * 0.08);
+            b = lerp(b, warmGray, amount * 0.04);
+            r -= amount * 0.070;
+            g -= amount * 0.006;
+            b += amount * 0.026;
+          }
+        }
+
+        data[index] = toByte(r);
+        data[index + 1] = toByte(g);
+        data[index + 2] = toByte(b);
+      }
+
+      targetContext.putImageData(imageData, 0, 0);
+    }
+
+    function getWarmOrangeMask(r, g, b) {
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const chroma = max - min;
+      const luma = (0.299 * r) + (0.587 * g) + (0.114 * b);
+
+      if (chroma < 0.035 || luma < 0.10 || luma > 0.96) return 0;
+      if (!(r > b && g > b * 0.70 && r > g * 0.92)) return 0;
+
+      const redBias = clamp01((r - b) / 0.45);
+      const orangeBand = clamp01(1 - Math.abs((r - g) - 0.10) / 0.30);
+      const notNeutral = clamp01(chroma / 0.30);
+      return clamp01(redBias * orangeBand * notNeutral);
+    }
+
+    function getSkinMask(r, g, b) {
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const chroma = max - min;
+      const luma = (0.299 * r) + (0.587 * g) + (0.114 * b);
+
+      if (chroma < 0.045 || luma < 0.16 || luma > 0.92) return 0;
+      if (!(r > b && r >= g * 0.88 && g > b * 0.72)) return 0;
+
+      const warmth = clamp01((r - b) / 0.42);
+      const notBlue = clamp01((g - b + 0.08) / 0.24);
+      const midLight = 1 - Math.abs(luma - 0.56) / 0.44;
+      return clamp01(warmth * notBlue * clamp01(midLight));
+    }
+
+    function clamp01(value) {
+      return Math.max(0, Math.min(1, value));
+    }
+
+    function smoothstep(edge0, edge1, value) {
+      const t = clamp01((value - edge0) / (edge1 - edge0));
+      return t * t * (3 - (2 * t));
+    }
+
+    function toByte(value) {
+      return Math.max(0, Math.min(255, Math.round(value * 255)));
+    }
+
+    function lerp(a, b, t) {
+      return a + ((b - a) * t);
+    }
+
+    function setCompare(value) {
+      afterLayer.style.width = `${value}%`;
+    }
+
+    async function exportImage() {
+      if (!state.image) {
+        setStatus("No image loaded.");
+        return;
+      }
+
+      setStatus("Processing export...");
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      const output = document.createElement("canvas");
+      processCanvas(state.sourceCanvas, output, state.values);
+      output.toBlob((blob) => {
+        if (!blob) {
+          setStatus("Export failed.");
+          return;
+        }
+
+        const link = document.createElement("a");
+        const name = state.fileName.replace(/\.[^.]+$/, "");
+        const suffix = state.activePreset === "custom" ? "custom" : state.activePreset;
+        link.download = `${name}_PL+_${suffix}.jpg`;
+        link.href = URL.createObjectURL(blob);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+        setStatus("Export completed.");
+      }, "image/jpeg", 0.92);
+    }
+
+    fileInput.addEventListener("change", (event) => {
+      loadFile(event.target.files[0]);
+    });
+
+    document.querySelectorAll("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => applyPreset(button.dataset.preset));
+    });
+
+    document.querySelectorAll("[data-quick]").forEach((button) => {
+      button.addEventListener("click", () => applyQuick(button.dataset.quick));
+    });
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        compareSlider.value = button.dataset.view === "after" ? 100 : 50;
+        setCompare(Number(compareSlider.value));
+      });
+    });
+
+    document.getElementById("resetButton").addEventListener("click", () => applyPreset("neutral"));
+    document.getElementById("exportButton").addEventListener("click", exportImage);
+
+    compareSlider.addEventListener("input", () => setCompare(Number(compareSlider.value)));
+
+    document.addEventListener("dragover", (event) => {
+      event.preventDefault();
+    });
+
+    document.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const file = [...event.dataTransfer.files].find((item) => item.type.startsWith("image/"));
+      loadFile(file);
+    });
+
+    buildSliders();
+    syncUi();
+  </script>
+</body>
+</html>

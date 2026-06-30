@@ -1,0 +1,14 @@
+{
+  "name": "as_is_deep",
+  "width": 0,
+  "height": 0,
+  "format": "jpg",
+  "quality": 92,
+  "crop": "none",
+  "brightness": -0.045,
+  "contrast": 1.18,
+  "saturation": 1.10,
+  "warmth": 0.02,
+  "sharpen": 0,
+  "suffix": "as_is_deep"
+}

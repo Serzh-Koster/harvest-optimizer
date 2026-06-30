@@ -1,0 +1,14 @@
+{
+  "name": "as_is_soft",
+  "width": 0,
+  "height": 0,
+  "format": "jpg",
+  "quality": 92,
+  "crop": "none",
+  "brightness": -0.03,
+  "contrast": 1.13,
+  "saturation": 1.03,
+  "warmth": 0.018,
+  "sharpen": 0,
+  "suffix": "as_is_soft"
+}

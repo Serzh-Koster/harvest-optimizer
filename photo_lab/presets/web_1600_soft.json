@@ -1,0 +1,14 @@
+{
+  "name": "web_1600_soft",
+  "width": 1600,
+  "height": 0,
+  "format": "jpg",
+  "quality": 90,
+  "crop": "none",
+  "brightness": -0.025,
+  "contrast": 1.10,
+  "saturation": 1.02,
+  "warmth": 0.014,
+  "sharpen": 0,
+  "suffix": "web_1600_soft"
+}
