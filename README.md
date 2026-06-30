@@ -5,7 +5,7 @@
 ## Як це працює
 
 1. Завантажте архів із цим проєктом (кнопка `Code` -> `Download ZIP`) та розпакуйте його на комп'ютер.
-2. Відкрийте файл `CONTROL_PANEL.html` у будь-якому зручному браузері.
+2. У папці photo_lab Відкрийте файл `CONTROL_PANEL.html` у будь-якому зручному браузері.
 3. Крутіть повзунки — панель інтуїтивна і одразу показує результат.
 
 ## Сумісність
@@ -22,7 +22,7 @@ A small local workshop for photo preparation. The tool is designed to be friendl
 ## How to use
 
 1. Download the project archive (`Code` button -> `Download ZIP`) and extract it to your computer.
-2. Open the `CONTROL_PANEL.html` file in any web browser.
+2. In the photo_lab folder, open the file `CONTROL_PANEL.html` in any convenient browser.
 3. Play with the sliders — the panel is intuitive and shows the result immediately.
 
 ## Compatibility
