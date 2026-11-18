@@ -271,7 +271,8 @@
       min-width: 0;
       padding: 24px;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      height: 100vh;
       gap: 16px;
       background: var(--bg);
     }
@@ -341,21 +342,50 @@
       background-position: 0 0, 0 12px, 12px -12px, -12px 0;
     }
 
-    /* Виправлення багу з розмірами полотен */
     .canvas-stack {
       position: relative;
-      display: inline-block; /* Чітко обгортає beforeCanvas */
-      max-width: 100%;
-      max-height: calc(100vh - 120px);
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
     }
 
-    #beforeCanvas {
+    .canvas-stack.dragging { cursor: grabbing; }
+
+    #beforeCanvas, #afterCanvas {
       display: block;
-      max-width: 100%;
-      max-height: calc(100vh - 120px);
-      width: auto;
-      height: auto;
-      object-fit: contain;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+    }
+
+    .viewbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .viewbar button {
+      min-height: 34px;
+      padding: 0 10px;
+      color: var(--ink);
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .viewbar button:disabled { opacity: .45; cursor: default; }
+    .viewbar button[aria-pressed="true"] { border-color: var(--accent); }
+    .viewbar output { min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+    .view-help { color: var(--muted); }
+    button:focus-visible, input:focus-visible, .canvas-stack:focus-visible {
+      outline: 2px solid var(--accent-hover);
+      outline-offset: 3px;
     }
 
     .after-layer {
@@ -379,14 +409,6 @@
       background: #fff;
       border-radius: 4px;
       box-shadow: 0 0 8px rgba(0,0,0,0.5);
-    }
-
-    #afterCanvas {
-      display: block;
-      height: 100%; /* Бере висоту від beforeCanvas */
-      width: auto;  /* Пропорційно розтягує ширину */
-      max-width: none;
-      max-height: none;
     }
 
     .badge {
@@ -432,9 +454,8 @@
       .compare-control {
         min-width: 0;
       }
-      #beforeCanvas, .canvas-stack {
-        max-height: 60vh;
-      }
+      .stage-wrap { height: 75vh; min-height: 420px; padding: 16px; }
+      .view-help { flex-basis: 100%; }
     }
   </style>
 </head>
@@ -471,7 +492,7 @@
           <button type="button" data-quick="calmWarm">Calm orange</button>
           <button type="button" data-quick="liftShadow">Lift shadows</button>
           <button type="button" data-quick="holdHighlights">Hold lights</button>
-          <button type="button" data-view="after">After only</button>
+          <button type="button" id="compareToggle">Before / After</button>
         </div>
       </section>
 
@@ -498,13 +519,25 @@
         </label>
       </div>
 
+      <div class="viewbar" role="group" aria-label="Перегляд світлини">
+        <button id="zoomOut" type="button" aria-label="Зменшити" data-needs-image disabled>−</button>
+        <output id="zoomLevel" aria-label="Масштаб">—</output>
+        <button id="zoomIn" type="button" aria-label="Збільшити" data-needs-image disabled>+</button>
+        <button id="actualSize" type="button" data-needs-image disabled>100%</button>
+        <button id="fitImage" type="button" data-needs-image disabled>Вписати</button>
+        <button type="button" data-view="before" aria-pressed="false" data-needs-image disabled>До</button>
+        <button type="button" data-view="split" aria-pressed="true" data-needs-image disabled>Порівняння</button>
+        <button type="button" data-view="after" aria-pressed="false" data-needs-image disabled>Після</button>
+        <span class="view-help">Коліщатко: масштаб · Перетягування: пересування</span>
+      </div>
+
       <div id="stage" class="stage">
         <div id="emptyState" class="empty-state">
           <strong>Workspace is empty</strong>
           <span>Drop a JPG, PNG, WEBP, or BMP file here</span>
         </div>
         <div id="canvasShell" class="canvas-shell">
-          <div id="canvasStack" class="canvas-stack">
+          <div id="canvasStack" class="canvas-stack" tabindex="0" role="group" aria-label="Світлина. Плюс і мінус змінюють масштаб, стрілки пересувають, 0 вписує кадр.">
             <canvas id="beforeCanvas"></canvas>
             <div id="afterLayer" class="after-layer">
               <canvas id="afterCanvas"></canvas>
@@ -562,7 +595,9 @@
       image: null,
       fileName: "",
       sourceCanvas: document.createElement("canvas"),
-      previewSource: document.createElement("canvas"),
+      view: { scale: 1, x: 0, y: 0, fit: true },
+      viewMode: "split",
+      loadToken: 0,
       values: { ...presets.neutral },
       renderHandle: 0,
       activePreset: "neutral"
@@ -580,6 +615,9 @@
     const canvasShell = document.getElementById("canvasShell");
     const compareSlider = document.getElementById("compareSlider");
     const presetName = document.getElementById("presetName");
+    const canvasStack = document.getElementById("canvasStack");
+    const zoomLevel = document.getElementById("zoomLevel");
+    const stage = document.getElementById("stage");
 
     function buildSliders() {
       sliderGroup.innerHTML = sliders.map((item) => `
@@ -680,18 +718,9 @@
       status.textContent = text;
     }
 
-    function fitPreviewSize(width, height) {
-      const longest = Math.max(width, height);
-      const limit = 1500;
-      const scale = longest > limit ? limit / longest : 1;
-      return {
-        width: Math.max(1, Math.round(width * scale)),
-        height: Math.max(1, Math.round(height * scale))
-      };
-    }
-
     async function loadFile(file) {
       if (!file) return;
+      const token = ++state.loadToken;
       setStatus("Loading...");
       const url = URL.createObjectURL(file);
       const image = new Image();
@@ -699,6 +728,7 @@
 
       image.onload = () => {
         URL.revokeObjectURL(url);
+        if (token !== state.loadToken) return;
         state.image = image;
         state.fileName = file.name;
         drawSourceCanvases(image);
@@ -707,12 +737,13 @@
         emptyState.style.display = "none";
         canvasShell.style.display = "grid";
         setStatus("");
-        renderPreview();
+        document.querySelectorAll("[data-needs-image]").forEach(button => button.disabled = false);
+        fitImage();
       };
 
       image.onerror = () => {
         URL.revokeObjectURL(url);
-        setStatus("Could not open image.");
+        if (token === state.loadToken) setStatus("Could not open image.");
       };
 
       image.src = url;
@@ -723,28 +754,65 @@
       state.sourceCanvas.height = image.naturalHeight;
       state.sourceCanvas.getContext("2d", { willReadFrequently: true }).drawImage(image, 0, 0);
 
-      const previewSize = fitPreviewSize(image.naturalWidth, image.naturalHeight);
-      state.previewSource.width = previewSize.width;
-      state.previewSource.height = previewSize.height;
-      state.previewSource
-        .getContext("2d", { willReadFrequently: true })
-        .drawImage(image, 0, 0, previewSize.width, previewSize.height);
+      state.view.fit = true;
+    }
 
-      beforeCanvas.width = previewSize.width;
-      beforeCanvas.height = previewSize.height;
-      afterCanvas.width = previewSize.width;
-      afterCanvas.height = previewSize.height;
+    function fitScale() {
+      return Math.min(1, canvasStack.clientWidth / state.sourceCanvas.width,
+        canvasStack.clientHeight / state.sourceCanvas.height);
+    }
 
-      const beforeContext = beforeCanvas.getContext("2d");
-      beforeContext.clearRect(0, 0, beforeCanvas.width, beforeCanvas.height);
-      beforeContext.drawImage(state.previewSource, 0, 0);
+    function constrainView() {
+      const view = state.view;
+      const width = canvasStack.clientWidth;
+      const height = canvasStack.clientHeight;
+      const imageWidth = state.sourceCanvas.width * view.scale;
+      const imageHeight = state.sourceCanvas.height * view.scale;
+      view.x = imageWidth <= width ? (width - imageWidth) / 2 : Math.max(width - imageWidth, Math.min(0, view.x));
+      view.y = imageHeight <= height ? (height - imageHeight) / 2 : Math.max(height - imageHeight, Math.min(0, view.y));
+      if (Number.isInteger(view.scale)) {
+        view.x = Math.round(view.x);
+        view.y = Math.round(view.y);
+      }
+    }
 
-      setCompare(Number(compareSlider.value));
+    function fitImage() {
+      if (!state.image || !canvasStack.clientWidth || !canvasStack.clientHeight) return;
+      state.view = { scale: fitScale(), x: 0, y: 0, fit: true };
+      constrainView();
+      scheduleRender();
+    }
+
+    function zoomTo(scale, x = canvasStack.clientWidth / 2, y = canvasStack.clientHeight / 2) {
+      if (!state.image) return;
+      const view = state.view;
+      const next = Math.max(Math.min(fitScale(), 0.25), Math.min(4, scale));
+      const ratio = next / view.scale;
+      view.x = x - (x - view.x) * ratio;
+      view.y = y - (y - view.y) * ratio;
+      view.scale = next;
+      view.fit = false;
+      constrainView();
+      scheduleRender();
     }
 
     function renderPreview() {
       if (!state.image) return;
-      processCanvas(state.previewSource, afterCanvas, state.values);
+      const width = canvasStack.clientWidth;
+      const height = canvasStack.clientHeight;
+      if (!width || !height) return;
+      beforeCanvas.width = width;
+      beforeCanvas.height = height;
+      constrainView();
+      const view = state.view;
+      const context = beforeCanvas.getContext("2d", { willReadFrequently: true });
+      // Render the visible region from the original, never an enlarged thumbnail.
+      context.drawImage(state.sourceCanvas, view.x, view.y,
+        state.sourceCanvas.width * view.scale, state.sourceCanvas.height * view.scale);
+      processCanvas(beforeCanvas, afterCanvas, state.values);
+      afterCanvas.style.width = `${width}px`;
+      afterCanvas.style.height = `${height}px`;
+      zoomLevel.textContent = `${Math.round(view.scale * 100)}%`;
     }
 
     function processCanvas(source, target, values) {
@@ -934,6 +1002,16 @@
 
     function setCompare(value) {
       afterLayer.style.width = `${value}%`;
+      document.querySelector(".badge.before").hidden = value === 100;
+      document.querySelector(".badge.after").hidden = value === 0;
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      setCompare(mode === "before" ? 0 : mode === "after" ? 100 : Number(compareSlider.value));
+      document.querySelectorAll("[data-view]").forEach(button => {
+        button.setAttribute("aria-pressed", String(button.dataset.view === mode));
+      });
     }
 
     async function exportImage() {
@@ -978,17 +1056,73 @@
       button.addEventListener("click", () => applyQuick(button.dataset.quick));
     });
 
-    document.querySelectorAll("[data-view]").forEach((button) => {
-      button.addEventListener("click", () => {
-        compareSlider.value = button.dataset.view === "after" ? 100 : 50;
-        setCompare(Number(compareSlider.value));
-      });
+    document.querySelectorAll("[data-view]").forEach(button => {
+      button.addEventListener("click", () => setViewMode(button.dataset.view));
     });
+    document.getElementById("compareToggle").addEventListener("click", () => {
+      setViewMode(state.viewMode === "split" ? "after" : "split");
+    });
+    document.getElementById("zoomIn").addEventListener("click", () => zoomTo(state.view.scale * 1.25));
+    document.getElementById("zoomOut").addEventListener("click", () => zoomTo(state.view.scale / 1.25));
+    document.getElementById("actualSize").addEventListener("click", () => zoomTo(1));
+    document.getElementById("fitImage").addEventListener("click", fitImage);
+
+    canvasStack.addEventListener("wheel", event => {
+      if (!state.image) return;
+      event.preventDefault();
+      const rect = canvasStack.getBoundingClientRect();
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? rect.height : 1);
+      zoomTo(state.view.scale * Math.exp(-Math.max(-200, Math.min(200, delta)) * .002),
+        event.clientX - rect.left, event.clientY - rect.top);
+    }, { passive: false });
+
+    let drag = null;
+    canvasStack.addEventListener("pointerdown", event => {
+      if (!state.image || event.button !== 0 || drag) return;
+      canvasStack.focus({ preventScroll: true });
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      canvasStack.setPointerCapture(event.pointerId);
+      canvasStack.classList.add("dragging");
+    });
+    canvasStack.addEventListener("pointermove", event => {
+      if (!drag || drag.id !== event.pointerId) return;
+      state.view.x += event.clientX - drag.x;
+      state.view.y += event.clientY - drag.y;
+      state.view.fit = false;
+      drag.x = event.clientX; drag.y = event.clientY;
+      constrainView();
+      scheduleRender();
+    });
+    function endDrag() { drag = null; canvasStack.classList.remove("dragging"); }
+    canvasStack.addEventListener("pointerup", endDrag);
+    canvasStack.addEventListener("pointercancel", endDrag);
+    canvasStack.addEventListener("lostpointercapture", endDrag);
+    canvasStack.addEventListener("keydown", event => {
+      if (!state.image || event.ctrlKey || event.metaKey || event.altKey) return;
+      const key = event.key;
+      if (!["+", "=", "-", "0", "1", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key)) return;
+      event.preventDefault();
+      if (key === "+" || key === "=") zoomTo(state.view.scale * 1.25);
+      else if (key === "-") zoomTo(state.view.scale / 1.25);
+      else if (key === "0") fitImage();
+      else if (key === "1") zoomTo(1);
+      else {
+        state.view.x += key === "ArrowLeft" ? 40 : key === "ArrowRight" ? -40 : 0;
+        state.view.y += key === "ArrowUp" ? 40 : key === "ArrowDown" ? -40 : 0;
+        state.view.fit = false;
+        constrainView(); scheduleRender();
+      }
+    });
+    new ResizeObserver(() => {
+      if (!state.image) return;
+      if (state.view.fit) fitImage();
+      else { constrainView(); scheduleRender(); }
+    }).observe(canvasStack);
 
     document.getElementById("resetButton").addEventListener("click", () => applyPreset("neutral"));
     document.getElementById("exportButton").addEventListener("click", exportImage);
 
-    compareSlider.addEventListener("input", () => setCompare(Number(compareSlider.value)));
+    compareSlider.addEventListener("input", () => setViewMode("split"));
 
     document.addEventListener("dragover", (event) => {
       event.preventDefault();
@@ -1005,3 +1139,4 @@
   </script>
 </body>
 </html>
+
