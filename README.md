@@ -1,52 +1,53 @@
-# Photo Lab 🌿
+# Photo Lab 2.0 🌿
 
-Маленька локальна майстерня для підготовки світлин. Інструмент створений бути дружнім, інтуїтивним і працювати повністю у вашому браузері без складного встановлення.
+**Світлини, корекція кольору та детальний перегляд. Без встановлення.**
 
-## Як це працює
+## ⬇️ [ЗАВАНТАЖИТИ PHOTO LAB 2.0](https://github.com/Serzh-Koster/harvest-optimizer/raw/refs/heads/main/Photo-Lab-2.0.zip)
 
-1. Завантажте архів із цим проєктом (кнопка `Code` -> `Download ZIP`) та розпакуйте його на комп'ютер.
-2. У папці photo_lab Відкрийте файл `CONTROL_PANEL.html` у будь-якому зручному браузері.
-3. Крутіть повзунки — панель інтуїтивна і одразу показує результат.
+### Як запустити
 
-## Детальний перегляд
+1. Натисніть **«Завантажити Photo Lab 2.0»** вище.
+2. У папці «Завантаження» натисніть правою кнопкою на **Photo-Lab-2.0.zip** → **«Видобути все»**.
+3. У розпакованій папці двічі клацніть **Photo-Lab-2.0.html**. Програма відкриється у браузері.
+4. Натисніть **Open Image**, виберіть свою світлину та налаштуйте її.
 
-- Збільшуйте й зменшуйте світлину коліщатком миші або кнопками `+` / `−`. Збільшення коліщатком тримається за місце під курсором.
-- Натисніть `100%`, щоб розглядати деталі оригіналу, або `Вписати`, щоб знову бачити весь кадр. Максимальний масштаб — 400%.
-- Перетягуйте збільшену світлину мишею. Корекція продовжує працювати під час детального перегляду.
-- Кнопки `До`, `Порівняння`, `Після` перемикають вигляд без зміни налаштувань корекції. Повзунок задає межу порівняння.
-- Коли область світлини у фокусі: `+` / `−` змінюють масштаб, `1` дає 100%, `0` вписує кадр, стрілки пересувають його.
+**У ZIP лише один файл. Інші папки з GitHub завантажувати не потрібно.**
 
-Масштаб змінює лише перегляд. Експорт залишається в повній роздільності оригіналу. Збільшення понад 100% не додає нових деталей. Інструмент працює локально, без завантаження світлин на сервер.
+### Що вміє
 
-## Сумісність
+- Корекція світла, тіней, контрасту й кольору.
+- Готові режими Soft, Deep та Skin-safe.
+- Зум коліщатком або кнопками до 400%, перегляд оригіналу на 100%.
+- Пересування збільшеної світлини мишею.
+- Режими **«До / Порівняння / Після»**.
+- Кнопка **«Вписати»** повертає весь кадр.
+- **Export JPG** зберігає результат у повному розмірі оригіналу.
 
-Система створена і стабільно працює на **Windows 10/11**. 
-На пристроях Apple (macOS) робота не перевірялася, але оскільки це повністю браузерне рішення, інструмент має працювати й там без жодних проблем.
+Працює локально: світлини не надсилаються на сервер. Інтернет для роботи програми не потрібен. У Windows відкривайте HTML-файл у Chrome або Edge. Якщо файл відкрився як текст, натисніть правою кнопкою → **«Відкрити за допомогою»** → виберіть браузер.
+
+### Оновлення з попередньої версії
+
+Розпакуйте новий ZIP в окрему папку та відкривайте новий HTML-файл. Старі світлини змінювати або переносити не потрібно.
 
 ---
 
-# Photo Lab 🌿 / English
+<details>
+<summary>English</summary>
 
-A small local workshop for photo preparation. The tool is designed to be friendly, intuitive, and works entirely in your web browser without any complex installation.
+## Download and run
 
-## How to use
+1. Click **Download Photo Lab 2.0** above.
+2. Extract **Photo-Lab-2.0.zip**.
+3. Double-click **Photo-Lab-2.0.html**.
+4. Click **Open Image**, adjust the photo, then **Export JPG**.
 
-1. Download the project archive (`Code` button -> `Download ZIP`) and extract it to your computer.
-2. In the photo_lab folder, open the file `CONTROL_PANEL.html` in any convenient browser.
-3. Play with the sliders — the panel is intuitive and shows the result immediately.
+The ZIP contains one self-contained HTML file. No installation or other repository folders are needed. Photos stay on your computer. Use the mouse wheel to zoom, drag to pan, **100%** for original detail, and **Вписати** to fit the whole photo. Export keeps the original dimensions.
 
-## Detailed viewing
+</details>
 
-- Use the mouse wheel or `+` / `−` to zoom, up to 400%. Wheel zoom stays anchored under the pointer.
-- Use `100%` to inspect original image detail and `Вписати` (Fit) to see the whole image.
-- Drag to pan. Adjustments stay live at every zoom level.
-- `До` (Before), `Порівняння` (Compare), and `Після` (After) switch views without changing the correction settings.
-- With the image area focused: `+` / `−` zoom, `1` selects 100%, `0` fits, and arrow keys pan.
+<details>
+<summary>Архів попередніх матеріалів</summary>
 
-Zoom affects viewing only; JPG export retains the original dimensions. Zoom beyond 100% cannot create new detail. Photos remain on your computer.
+Старі Windows-скрипти, журнали, JSON-пресети та приклади збережені в [архівній гілці](https://github.com/Serzh-Koster/harvest-optimizer/tree/archive/legacy-windows-tools-20261118). Для Photo Lab 2.0 вони не потрібні.
 
-## Compatibility
-
-The system was created and works stably on **Windows 10/11**. 
-It has not been tested on Apple (macOS) devices, but since it is a purely browser-based solution, it should run there without any issues.
-
+</details>
